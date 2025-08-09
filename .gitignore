@@ -3,6 +3,7 @@
 ##
 ## Get latest from `dotnet new gitignore`
 
+Test/*
 data/*
 !data/README.md
 
