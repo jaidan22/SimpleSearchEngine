@@ -1,4 +1,4 @@
-﻿namespace Indexer.Services
+﻿namespace Search.Common.Services
 {
     public static class StopWords
     {

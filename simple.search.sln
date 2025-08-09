@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34511.84
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestIndexer", "simple.search\TestIndexer.csproj", "{C8925C40-62A1-4109-B047-BAFECEF0EA2F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestIndexer", "Test\TestIndexer.csproj", "{C8925C40-62A1-4109-B047-BAFECEF0EA2F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "utils", "utils", "{F826D3DE-4A82-4534-B420-AB14CB955986}"
 EndProject

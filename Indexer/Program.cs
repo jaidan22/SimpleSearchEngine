@@ -1,6 +1,6 @@
 ﻿using Indexer.Services;
+using Search.Common.Services;
 using ShellProgressBar;
-using System.Text.Json;
 
 class Program
 {
@@ -14,16 +14,13 @@ class Program
 
         string dataFolder = args[0];
 
-        const int BATCH_SIZE = 5000;
-        int batchCounter = 0;
-
+        const int SHARD_SIZE = 6;
 
         var tokenizer = new Tokenizer();
-        var indexBuilder = new IndexBuilder();
+        var indexBuilder = new IndexBuilder(SHARD_SIZE);
 
         var options = new ProgressBarOptions
         {
-            ProgressCharacter = '=',
             ProgressBarOnBottom = true
         };
 
@@ -33,19 +30,17 @@ class Program
         {
             foreach (var file in files)
             {
-                indexBuilder.AddDocument(docId, file);
                 var lines = File.ReadAllLines(file);
                 int lineNo = 1;
+                int shardIndex = GetShardIndex(Path.GetFileNameWithoutExtension(file), SHARD_SIZE);
+
+                indexBuilder.AddDocument(docId, shardIndex, file);
+
                 foreach (var line in lines)
                 {
                     var tokens = tokenizer.Tokenize(line);
-                    indexBuilder.UpdateIndex(docId, lineNo, tokens);
+                    indexBuilder.UpdateIndex(docId, shardIndex, lineNo, tokens);
                     lineNo++;
-                }
-
-                if (docId % BATCH_SIZE == 0)
-                {
-                    indexBuilder.SavePartialIndex(batchCounter++, dataFolder);
                 }
 
                 docId++;
@@ -53,17 +48,12 @@ class Program
             }
         }
 
-        if(indexBuilder.GetBatchIndex().Count > 0)
-            indexBuilder.SavePartialIndex(batchCounter, dataFolder);
+        indexBuilder.SaveIndex(dataFolder);
+        indexBuilder.SaveDocument(dataFolder);
 
-        var documents = indexBuilder.GetDocuments();
-        File.WriteAllText(Path.Combine(dataFolder, "documents.json"),
-            JsonSerializer.Serialize(documents, new JsonSerializerOptions { WriteIndented = true }));
-
-        documents.Clear();
-
-        indexBuilder.MergePartialIndexes(dataFolder);
-
-        Console.WriteLine($"Indexing complete. {documents.Count} lines indexed.");
+        Console.WriteLine($"✅ Indexing complete");
     }
+
+    private static int GetShardIndex(string docName, int shardSize)
+        => Math.Abs(docName.GetHashCode()) % shardSize;
 }

@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 
-namespace Indexer.Services
+namespace Search.Common.Services
 {
     public class Tokenizer
     {

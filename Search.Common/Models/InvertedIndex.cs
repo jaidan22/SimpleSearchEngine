@@ -1,7 +1,6 @@
 ﻿namespace Search.Common.Models
 {
-    public class InvertedIndex
+    public class InvertedIndex : Dictionary<string, List<IndexProperties>>
     {
-        public Dictionary<string, List<IndexProperties>> Index { get; set; } = new();
     }
 }
