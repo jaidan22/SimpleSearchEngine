@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using System.Text.Json;
 using System.Xml;
 
 class Program
@@ -14,9 +13,6 @@ class Program
 
         string inputFile = args[0];
         string outputDir = Path.Combine(args[1], "pages") ;
-        //string docsMapPath = Path.Combine(args[1], "documents.json");
-
-        //var docMap = new Dictionary<int, string>();
 
         if (!File.Exists(inputFile))
         {
@@ -32,17 +28,12 @@ class Program
 
         using var fileStream = File.OpenRead(inputFile);
 
-        ParseWikipediaXml(fileStream, outputDir, docMap);
+        ParseWikipediaXml(fileStream, outputDir);
 
         Console.WriteLine("✅ Extraction complete.");
-
-        //File.WriteAllText(docsMapPath, JsonSerializer.Serialize(docMap, new JsonSerializerOptions { WriteIndented = true }));
-
-        //Console.WriteLine($"✅ Docuement mapping created -> {docsMapPath}");
-
     }
 
-    static void ParseWikipediaXml(Stream xmlStream, string outputDir, Dictionary<int, string> docMap)
+    static void ParseWikipediaXml(Stream xmlStream, string outputDir)
     {
         using var xmlReader = XmlReader.Create(xmlStream, new XmlReaderSettings
         {
@@ -69,8 +60,6 @@ class Program
                 {
                     string safeTitle = string.Join("_", title.Split(Path.GetInvalidFileNameChars()));
                     File.WriteAllText(Path.Combine(outputDir, safeTitle + ".txt"), text, Encoding.UTF8);
-
-                    docMap.Add(count++, safeTitle);
 
                     count++;
                     if (count % 1000 == 0)
