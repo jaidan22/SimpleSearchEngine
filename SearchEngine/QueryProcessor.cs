@@ -26,6 +26,7 @@ namespace SearchEngine
 
             using (var pbar = new ProgressBar(_numShards, "Searching in shards..."))
             {
+                var docCount = 0;
                 for (int shardId = 0; shardId < _numShards; shardId++)
                 {
                     var shardedIndexPath = Path.Combine(_dataFolder, "index", $"inverted_index_shard{shardId}.json");
@@ -36,20 +37,53 @@ namespace SearchEngine
                     var index = LoadFile<InvertedIndex>(shardedIndexPath);
                     var document = LoadFile<DocumentIndex>(shardedDocPath);
 
-                    foreach (var token in queryTokens)
+                    docCount += document.Count;
+
+                    var postingsLists = queryTokens
+                        .Select(t => index.ContainsKey(t) ? index[t] : new List<IndexProperties>())
+                        .ToList();
+
+                    if (postingsLists.Any(p => p.Count == 0))
+                        break; // at least one token not found
+
+                    var firstTokenGroups = postingsLists[0]
+                        .GroupBy(p => (p.DocId, p.LineNo))
+                        .ToDictionary(g => g.Key, g => g.Select(x => x.Position)
+                        .ToHashSet());
+
+                    foreach (var docLine in firstTokenGroups.Keys)
                     {
-                        if (index != null && index.ContainsKey(token))
+                        var possiblePositions = firstTokenGroups[docLine];
+
+                        foreach (var startPos in possiblePositions)
                         {
-                            foreach (var properties in index[token])
+                            bool match = true;
+                            for (int i = 1; i < queryTokens.Count; i++)
                             {
-                                var key = document[properties.DocId];
+                                var nextTokenPositions = postingsLists[i]
+                                    .Where(p => p.DocId == docLine.DocId && p.LineNo == docLine.LineNo)
+                                    .Select(p => p.Position)
+                                    .ToHashSet();
+
+                                // PHRASE MATCHING
+                                if (!nextTokenPositions.Contains(startPos + i))
+                                {
+                                    match = false;
+                                    break;
+                                }
+                            }
+                            if (match)
+                            {
+                                var key = document[docLine.DocId];
                                 if (!results.ContainsKey(key))
                                     results[key] = new HashSet<int>();
-                                results[key].Add(properties.LineNo);
+                                results[key].Add(docLine.LineNo);
+                                break;
                             }
                         }
                     }
-                    pbar.Tick($"Searched {document.Count} Documents, found {results.Count} matches");
+
+                    pbar.Tick($"Searched {docCount} Documents, found {results.Count} matches");
                 }
             }
             return results.Select(r => new QueryResult
@@ -57,7 +91,7 @@ namespace SearchEngine
                 DocName = Path.GetFileNameWithoutExtension(r.Key),
                 FilePath = r.Key,
                 Lines = r.Value.OrderBy(x => x).ToList()
-            }).ToList();
+            }).OrderBy(x => x.Lines.Count).ToList();
         }
 
         private T LoadFile<T>(string path)
