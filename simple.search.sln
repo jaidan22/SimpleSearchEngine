@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34511.84
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "utils", "utils", "{F826D3DE-4A82-4534-B420-AB14CB955986}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{F826D3DE-4A82-4534-B420-AB14CB955986}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WikiParser", "WikiParser\WikiParser.csproj", "{B16D4741-3B90-4991-80F1-BD72384DC859}"
 EndProject

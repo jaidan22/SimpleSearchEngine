@@ -51,7 +51,7 @@ class Program
         indexBuilder.SaveIndex(dataFolder);
         indexBuilder.SaveDocument(dataFolder);
 
-        Console.WriteLine($"✅ Indexing complete");
+        Console.WriteLine($"✅ Indexing completed");
     }
 
     private static int GetShardIndex(string docName, int shardSize)

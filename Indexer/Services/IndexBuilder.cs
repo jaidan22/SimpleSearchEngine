@@ -1,4 +1,5 @@
 ﻿using Search.Common.Models;
+using System.Diagnostics.Metrics;
 using System.Text.Json;
 
 namespace Indexer.Services
@@ -8,6 +9,7 @@ namespace Indexer.Services
         private readonly List<InvertedIndex> _invertedIndices;
         private readonly List<DocumentIndex> _documents;
         private readonly int _numShards;
+        private readonly JsonSerializerOptions _jsonSerialiseOptions = new() { WriteIndented = true };
 
         public IndexBuilder(int numShards)
         {
@@ -23,11 +25,13 @@ namespace Indexer.Services
 
         public void UpdateIndex(int docId, int shardIndex, int lineNo, List<string> tokens)
         {
+            int pos = 0;
             foreach (var token in tokens.Distinct())
             {
                 if (!_invertedIndices[shardIndex].ContainsKey(token))
                     _invertedIndices[shardIndex][token] = new List<IndexProperties>();
-                _invertedIndices[shardIndex][token].Add(new IndexProperties { DocId = docId, LineNo = lineNo });
+                _invertedIndices[shardIndex][token].Add(new IndexProperties { DocId = docId, LineNo = lineNo, Position = pos });
+                pos++;
             }
         }
 
@@ -37,26 +41,30 @@ namespace Indexer.Services
         {
             int i = 0;
             Directory.CreateDirectory(Path.Combine(dataFolder, "index"));
+            Console.Write("\n\r [-] Writing index files");
             foreach (var index in _invertedIndices)
             {
                 string path = Path.Combine(dataFolder, "index", $"inverted_index_shard{i}.json");
-                File.WriteAllText(path, JsonSerializer.Serialize(index, new JsonSerializerOptions { WriteIndented = true }));
+                File.WriteAllText(path, JsonSerializer.Serialize(index, _jsonSerialiseOptions));
                 index.Clear();
                 i++;
             }
+            Console.Write("\r ✔ Created Index files");
         }
 
         public void SaveDocument(string dataFolder)
         {
             int i = 0;
             Directory.CreateDirectory(Path.Combine(dataFolder, "documents"));
+            Console.Write("\n\r [-] Writing Document files");
             foreach (var doc in _documents)
             {
                 string path = Path.Combine(dataFolder, "documents", $"documents_shard{i}.json");
-                File.WriteAllText(path, JsonSerializer.Serialize(doc, new JsonSerializerOptions { WriteIndented = true }));
+                File.WriteAllText(path, JsonSerializer.Serialize(doc, _jsonSerialiseOptions));
                 doc.Clear();
                 i++;
             }
+            Console.Write("\r ✔ Created Document files \n");
         }
     }
 }
